@@ -1,0 +1,8 @@
+httpx<1,>=0.27
+playwright<2,>=1.51
+pydantic<3,>=2.8
+rich<14,>=13.7
+typer<1,>=0.12
+
+[dev]
+pytest<9,>=8.2

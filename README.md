@@ -1,106 +1,153 @@
-# TC Skript Novy
+# tc-sniper v2
 
-`tc_skript_novy WORKING` je distribucni build konzoloveho nastroje `TC HLIDAC` pro hlidani terminu v TCB strance a pravidelne prochazeni vybranych dnu a casu.
+`tc-sniper v2` je nova CLI aplikace pro hlidani a automatickou rezervaci terminu v Moodle Testovacim centru na `moodle.czu.cz`.
 
-Repozitar aktualne obsahuje hotovy Windows build:
+Projekt nahradil puvodni zabaleny `.exe` build. Repo ted obsahuje jen novy Python projekt.
 
-- `tc_skript_novy.exe` - hlavni aplikace
-- `_internal/` - pribaleny Python runtime a knihovny; tato slozka musi zustat vedle `.exe`
+## Co umi
 
-## Co aplikace dela
+- otevrit browser a ulozit prihlasenou Moodle session
+- nacist TCB stranku kurzu z `/mod/tcb/view.php?id=...`
+- najit vsechny testy na TCB strance
+- vybrat konkretni test podle `quiz_id`
+- nacist dostupne dny a sloty
+- filtrovat dny a casy podle preferenci uzivatele
+- pri nalezu matching slotu automaticky odeslat rezervaci
 
-Po spusteni otevre interaktivni konzolovou konfiguraci a vyzada si:
+## Stack
 
-1. URL TCB stranky
-2. seznam dnu nebo rozsah dnu
-3. rezim zadani casu
-4. interval mezi pruchody
+- Python 3.12+
+- Playwright
+- httpx
+- Typer
+- Rich
+- Pydantic
+- pytest
 
-Z testovaneho chovani vyplyva, ze URL musi smerovat na:
+## Struktura projektu
 
-- `/mod/tcb/view.php`
-- obsahovat parametry `id=...` a `quiz=...`
+```text
+src/tc_sniper/
+  auth.py
+  cli.py
+  client.py
+  models.py
+  parsing.py
+  prompts.py
+  session_store.py
+  settings.py
+  watcher.py
 
-Aplikace pracuje se dny a sloty z URL a nasledne pouziva automatizaci pres Chrome/Selenium.
+tests/
+  fixtures/
+  test_inputs.py
+  test_parsing.py
 
-## Pozadavky
+run_tc_sniper.py
+pyproject.toml
+```
 
-- Windows
-- pristup k internetu
-- nainstalovany Google Chrome
-- moznost stahnout ChromeDriver pri prvnim spusteni
+## Instalace
 
-Build obsahuje mimo jine `selenium`, `requests` a `webdriver_manager`. Pri startu se ChromeDriver stahuje automaticky. Pokud je pocitac offline nebo blokovany proxy/firewallem, aplikace skonci chybou pri stahovani driveru.
+V koreni projektu:
+
+```powershell
+python -m pip install -e .[dev]
+python -m playwright install chromium
+```
 
 ## Spusteni
 
-V PowerShellu nebo CMD spust:
+Nejjednodussi je pouzivat root launcher:
 
 ```powershell
-.\tc_skript_novy.exe
+python run_tc_sniper.py --help
 ```
 
-## Prubeh konfigurace
+Hlavni prikazy:
 
-### 1. URL z TC
+```powershell
+python run_tc_sniper.py login
+python run_tc_sniper.py status
+python run_tc_sniper.py watch
+python run_tc_sniper.py logout
+```
 
-Program ocekava URL ve tvaru podobnem:
+## Workflow
+
+### 1. Login
+
+```powershell
+python run_tc_sniper.py login
+```
+
+Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a vrat se do terminalu. Po potvrzeni se session ulozi lokalne do:
 
 ```text
-https://example.com/mod/tcb/view.php?id=123&quiz=456&day=2&slot=3
+%USERPROFILE%\.tc-sniper\
 ```
 
-Pokud URL neni TCB stranka nebo chybi `id` a `quiz`, aplikace skonci validacni chybou.
+### 2. Kontrola session
 
-### 2. Dny
-
-Lze zadat:
-
-- seznam: `2026-01-26,2026-01-27`
-- rozsah: `2026-01-26..2026-01-27`
-
-### 3. Casy
-
-K dispozici jsou dva rezimy:
-
-- `window` - zada se cas od, cas do a krok v minutach
-- `list` - zada se rucne seznam casu oddelenych carkami
-
-Priklad pro `window`:
-
-```text
-Cas OD: 11:00
-Cas DO: 18:00
-Krok: 15
+```powershell
+python run_tc_sniper.py status
 ```
 
-Priklad pro `list`:
+### 3. Watch
 
-```text
-16:40,17:00,17:20
+```powershell
+python run_tc_sniper.py watch
 ```
 
-### 4. Interval
+App se postupne zepta na:
 
-Nakonec se zadava interval mezi pruchody v sekundach. Vychozi hodnota je `10`.
+1. TCB odkaz kurzu
+2. vyber testu
+3. dny
+4. casy
+5. interval mezi pruchody
 
-## Zname chovani
+Podporovane formaty dnu:
 
-- Pokud nespustis program interaktivne, skonci na `EOF when reading a line`.
-- Pokud zadas neplatne URL, zobrazi validacni chybu.
-- Pokud nezadas spravne rezim casu, aplikace odmitne vstup s chybou `Pouzij 'window' nebo 'list'`.
-- Pokud neni dostupny internet nebo je blokovany pristup na `googlechromelabs.github.io`, nepodari se stahnout ChromeDriver.
+- `2026-05-30..2026-06-20`
+- `2026-30-05..2026-20-06`
+- `30.05.2026..20.06.2026`
+- `2026-05-30,2026-06-03`
 
-## Doporuceni k pouzivani
+Podporovane casy:
 
-- Nemaz ani nepresouvej `_internal/` bez soucasneho presunu `tc_skript_novy.exe`.
-- Spoustej aplikaci z adresare, kde lezi `.exe` i `_internal/`.
-- Pri problemech se startem over pripojeni k internetu, proxy nastaveni a dostupnost Chrome.
+- `list`: `08:40,14:30,16:00`
+- `window`: od-do + krok v minutach
 
-## Stav repozitare
+## Jak funguje booking
 
-Tento repozitar momentalne obsahuje distribucni artefakt, ne zdrojove `.py` soubory. Pokud budes chtit, muzu jako dalsi krok README rozsirit treba o:
+Discovery:
 
-- sekci s troubleshootingem
-- navod pro release/build proces
-- strucny changelog nebo verzovani
+- dny se nacitaji pres `GET /mod/tcb/view.php?id=<tcb_id>&quiz=<quiz_id>`
+- sloty se nacitaji pres `GET /mod/tcb/view.php?id=<tcb_id>&day=<date>&quiz=<quiz_id>`
+
+Mutace:
+
+- registrace pres `POST /mod/tcb/view.php`
+- odhlaseni pres `POST /mod/tcb/view.php`
+- zmena terminu je pripravena v booking klientovi
+
+## Testy
+
+```powershell
+python -m pytest
+```
+
+Aktualne jsou pokryte hlavne:
+
+- parsovani TCB stranky
+- parsovani dnu a slotu
+- parsovani rezervace
+- vstupni formaty dnu a casu
+
+## Poznamky
+
+- Projekt zatim cilene podporuje `moodle.czu.cz`.
+- Aplikace je zatim `CLI only`.
+- Session soubory nejsou verzovane a jsou v `.gitignore`.
+- Lokalni event log uspesnych rezervaci se uklada do `%USERPROFILE%\.tc-sniper\events.log`.

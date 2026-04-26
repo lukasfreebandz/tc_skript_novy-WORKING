@@ -1,0 +1,2 @@
+[console_scripts]
+tc-sniper = tc_sniper.cli:app
