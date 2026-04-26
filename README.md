@@ -1,0 +1,106 @@
+# TC Skript Novy
+
+`tc_skript_novy WORKING` je distribucni build konzoloveho nastroje `TC HLIDAC` pro hlidani terminu v TCB strance a pravidelne prochazeni vybranych dnu a casu.
+
+Repozitar aktualne obsahuje hotovy Windows build:
+
+- `tc_skript_novy.exe` - hlavni aplikace
+- `_internal/` - pribaleny Python runtime a knihovny; tato slozka musi zustat vedle `.exe`
+
+## Co aplikace dela
+
+Po spusteni otevre interaktivni konzolovou konfiguraci a vyzada si:
+
+1. URL TCB stranky
+2. seznam dnu nebo rozsah dnu
+3. rezim zadani casu
+4. interval mezi pruchody
+
+Z testovaneho chovani vyplyva, ze URL musi smerovat na:
+
+- `/mod/tcb/view.php`
+- obsahovat parametry `id=...` a `quiz=...`
+
+Aplikace pracuje se dny a sloty z URL a nasledne pouziva automatizaci pres Chrome/Selenium.
+
+## Pozadavky
+
+- Windows
+- pristup k internetu
+- nainstalovany Google Chrome
+- moznost stahnout ChromeDriver pri prvnim spusteni
+
+Build obsahuje mimo jine `selenium`, `requests` a `webdriver_manager`. Pri startu se ChromeDriver stahuje automaticky. Pokud je pocitac offline nebo blokovany proxy/firewallem, aplikace skonci chybou pri stahovani driveru.
+
+## Spusteni
+
+V PowerShellu nebo CMD spust:
+
+```powershell
+.\tc_skript_novy.exe
+```
+
+## Prubeh konfigurace
+
+### 1. URL z TC
+
+Program ocekava URL ve tvaru podobnem:
+
+```text
+https://example.com/mod/tcb/view.php?id=123&quiz=456&day=2&slot=3
+```
+
+Pokud URL neni TCB stranka nebo chybi `id` a `quiz`, aplikace skonci validacni chybou.
+
+### 2. Dny
+
+Lze zadat:
+
+- seznam: `2026-01-26,2026-01-27`
+- rozsah: `2026-01-26..2026-01-27`
+
+### 3. Casy
+
+K dispozici jsou dva rezimy:
+
+- `window` - zada se cas od, cas do a krok v minutach
+- `list` - zada se rucne seznam casu oddelenych carkami
+
+Priklad pro `window`:
+
+```text
+Cas OD: 11:00
+Cas DO: 18:00
+Krok: 15
+```
+
+Priklad pro `list`:
+
+```text
+16:40,17:00,17:20
+```
+
+### 4. Interval
+
+Nakonec se zadava interval mezi pruchody v sekundach. Vychozi hodnota je `10`.
+
+## Zname chovani
+
+- Pokud nespustis program interaktivne, skonci na `EOF when reading a line`.
+- Pokud zadas neplatne URL, zobrazi validacni chybu.
+- Pokud nezadas spravne rezim casu, aplikace odmitne vstup s chybou `Pouzij 'window' nebo 'list'`.
+- Pokud neni dostupny internet nebo je blokovany pristup na `googlechromelabs.github.io`, nepodari se stahnout ChromeDriver.
+
+## Doporuceni k pouzivani
+
+- Nemaz ani nepresouvej `_internal/` bez soucasneho presunu `tc_skript_novy.exe`.
+- Spoustej aplikaci z adresare, kde lezi `.exe` i `_internal/`.
+- Pri problemech se startem over pripojeni k internetu, proxy nastaveni a dostupnost Chrome.
+
+## Stav repozitare
+
+Tento repozitar momentalne obsahuje distribucni artefakt, ne zdrojove `.py` soubory. Pokud budes chtit, muzu jako dalsi krok README rozsirit treba o:
+
+- sekci s troubleshootingem
+- navod pro release/build proces
+- strucny changelog nebo verzovani
