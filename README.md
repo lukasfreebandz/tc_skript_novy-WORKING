@@ -1,32 +1,29 @@
 # tc-sniper v2
 
-`tc-sniper v2` je nova CLI aplikace pro hlidani a automatickou rezervaci terminu v Moodle Testovacim centru na `moodle.czu.cz`.
+`tc-sniper v2` je CLI aplikace pro hlidani a automatickou rezervaci terminu v Moodle Testovacim centru na `moodle.czu.cz`.
 
-Projekt nahradil puvodni zabaleny `.exe` build. Repo ted obsahuje jen novy Python projekt.
+Repo ted obsahuje:
+
+- novy Python projekt ve `src/tc_sniper`
+- testy a fixture pro parsery
+- finalni one-file build v `dist_nuitka/run_tc_sniper.exe`
 
 ## Co umi
 
 - otevrit browser a ulozit prihlasenou Moodle session
-- nacist TCB stranku kurzu z `/mod/tcb/view.php?id=...`
-- najit vsechny testy na TCB strance
-- vybrat konkretni test podle `quiz_id`
+- nacist TCB stranku z `/mod/tcb/view.php?id=...`
+- najit vsechny testy na dane TCB strance
+- vybrat konkretni test
 - nacist dostupne dny a sloty
-- filtrovat dny a casy podle preferenci uzivatele
-- pri nalezu matching slotu automaticky odeslat rezervaci
-
-## Stack
-
-- Python 3.12+
-- Playwright
-- httpx
-- Typer
-- Rich
-- Pydantic
-- pytest
+- filtrovat dny a casy podle preferenci
+- pri nalezu shody automaticky odeslat rezervaci
 
 ## Struktura projektu
 
 ```text
+dist_nuitka/
+  run_tc_sniper.exe
+
 src/tc_sniper/
   auth.py
   cli.py
@@ -45,26 +42,34 @@ tests/
 
 run_tc_sniper.py
 pyproject.toml
-```
-
-## Instalace
-
-V koreni projektu:
-
-```powershell
-python -m pip install -e .[dev]
-python -m playwright install chromium
+README.md
 ```
 
 ## Spusteni
 
-Nejjednodussi je pouzivat root launcher:
+### Varianta 1: finalni `.exe`
+
+Nejjednodussi je pustit hotovy build:
 
 ```powershell
+.\dist_nuitka\run_tc_sniper.exe --help
+.\dist_nuitka\run_tc_sniper.exe login
+.\dist_nuitka\run_tc_sniper.exe status
+.\dist_nuitka\run_tc_sniper.exe watch
+.\dist_nuitka\run_tc_sniper.exe logout
+```
+
+### Varianta 2: Python launcher
+
+Pokud chces spoustet projekt primo ze zdrojaku:
+
+```powershell
+python -m pip install -e .[dev]
+python -m playwright install chromium
 python run_tc_sniper.py --help
 ```
 
-Hlavni prikazy:
+Prikazy:
 
 ```powershell
 python run_tc_sniper.py login
@@ -78,10 +83,16 @@ python run_tc_sniper.py logout
 ### 1. Login
 
 ```powershell
+.\dist_nuitka\run_tc_sniper.exe login
+```
+
+nebo:
+
+```powershell
 python run_tc_sniper.py login
 ```
 
-Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a vrat se do terminalu. Po potvrzeni se session ulozi lokalne do:
+Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a po navratu do terminalu potvrd Enterem. Session se ulozi lokalne do:
 
 ```text
 %USERPROFILE%\.tc-sniper\
@@ -90,22 +101,23 @@ Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a vrat se do terminalu
 ### 2. Kontrola session
 
 ```powershell
-python run_tc_sniper.py status
+.\dist_nuitka\run_tc_sniper.exe status
 ```
 
 ### 3. Watch
 
 ```powershell
-python run_tc_sniper.py watch
+.\dist_nuitka\run_tc_sniper.exe watch
 ```
 
-App se postupne zepta na:
+App se zepta na:
 
-1. TCB odkaz kurzu
+1. TCB odkaz
 2. vyber testu
 3. dny
-4. casy
-5. interval mezi pruchody
+4. rezim casu
+5. casy nebo casove okno
+6. interval mezi pruchody
 
 Podporovane formaty dnu:
 
@@ -119,18 +131,20 @@ Podporovane casy:
 - `list`: `08:40,14:30,16:00`
 - `window`: od-do + krok v minutach
 
-## Jak funguje booking
+Watcher behem behu vypisuje konkretni pruchody, dny a casy, ktere prave kontroluje.
+
+## Jak funguje
 
 Discovery:
 
 - dny se nacitaji pres `GET /mod/tcb/view.php?id=<tcb_id>&quiz=<quiz_id>`
 - sloty se nacitaji pres `GET /mod/tcb/view.php?id=<tcb_id>&day=<date>&quiz=<quiz_id>`
 
-Mutace:
+Booking:
 
 - registrace pres `POST /mod/tcb/view.php`
 - odhlaseni pres `POST /mod/tcb/view.php`
-- zmena terminu je pripravena v booking klientovi
+- zmena terminu je pripravena v klientovi, ale watch flow v MVP dela primarne novou rezervaci
 
 ## Testy
 
@@ -138,16 +152,17 @@ Mutace:
 python -m pytest
 ```
 
-Aktualne jsou pokryte hlavne:
+Aktualne pokryvaji hlavne:
 
 - parsovani TCB stranky
-- parsovani dnu a slotu
-- parsovani rezervace
+- parsovani dostupnych dnu a slotu
+- parsovani existujici rezervace
 - vstupni formaty dnu a casu
 
 ## Poznamky
 
-- Projekt zatim cilene podporuje `moodle.czu.cz`.
-- Aplikace je zatim `CLI only`.
-- Session soubory nejsou verzovane a jsou v `.gitignore`.
-- Lokalni event log uspesnych rezervaci se uklada do `%USERPROFILE%\.tc-sniper\events.log`.
+- Projekt cilene podporuje `moodle.czu.cz`.
+- Aplikace je `CLI only`.
+- Session soubory nejsou verzovane.
+- Event log uspesnych rezervaci se uklada do `%USERPROFILE%\.tc-sniper\events.log`.
+- Finalni one-file build je v `dist_nuitka/run_tc_sniper.exe`.

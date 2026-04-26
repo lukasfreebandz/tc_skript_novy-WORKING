@@ -6,9 +6,12 @@ __pycache__/
 *.pyd
 dist/
 build/
+dist_nuitka/
 htmlcov/
 .coverage
+.nuitka-cache/
+_tc_runtime/
+*.spec
 
 # Local runtime/session data
 .tc-sniper/
-
