@@ -6,7 +6,7 @@ Repo ted obsahuje:
 
 - novy Python projekt ve `src/tc_sniper`
 - testy a fixture pro parsery
-- finalni one-file build v `dist_nuitka/run_tc_sniper.exe`
+- finalni one-file build v `run_tc_sniper.exe`
 
 ## Co umi
 
@@ -21,9 +21,6 @@ Repo ted obsahuje:
 ## Struktura projektu
 
 ```text
-dist_nuitka/
-  run_tc_sniper.exe
-
 src/tc_sniper/
   auth.py
   cli.py
@@ -41,6 +38,7 @@ tests/
   test_parsing.py
 
 run_tc_sniper.py
+run_tc_sniper.exe
 pyproject.toml
 README.md
 ```
@@ -52,11 +50,11 @@ README.md
 Nejjednodussi je pustit hotovy build:
 
 ```powershell
-.\dist_nuitka\run_tc_sniper.exe --help
-.\dist_nuitka\run_tc_sniper.exe login
-.\dist_nuitka\run_tc_sniper.exe status
-.\dist_nuitka\run_tc_sniper.exe watch
-.\dist_nuitka\run_tc_sniper.exe logout
+.\run_tc_sniper.exe --help
+.\run_tc_sniper.exe login
+.\run_tc_sniper.exe status
+.\run_tc_sniper.exe watch
+.\run_tc_sniper.exe logout
 ```
 
 ### Varianta 2: Python launcher
@@ -83,7 +81,7 @@ python run_tc_sniper.py logout
 ### 1. Login
 
 ```powershell
-.\dist_nuitka\run_tc_sniper.exe login
+.\run_tc_sniper.exe login
 ```
 
 nebo:
@@ -101,13 +99,13 @@ Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a po navratu do termin
 ### 2. Kontrola session
 
 ```powershell
-.\dist_nuitka\run_tc_sniper.exe status
+.\run_tc_sniper.exe status
 ```
 
 ### 3. Watch
 
 ```powershell
-.\dist_nuitka\run_tc_sniper.exe watch
+.\run_tc_sniper.exe watch
 ```
 
 App se zepta na:
@@ -165,4 +163,4 @@ Aktualne pokryvaji hlavne:
 - Aplikace je `CLI only`.
 - Session soubory nejsou verzovane.
 - Event log uspesnych rezervaci se uklada do `%USERPROFILE%\.tc-sniper\events.log`.
-- Finalni one-file build je v `dist_nuitka/run_tc_sniper.exe`.
+- Finalni one-file build je v `run_tc_sniper.exe`.
