@@ -24,6 +24,11 @@ def test_parse_course_page_finds_quizzes_and_days() -> None:
     assert course.sesskey == "ABC123"
     assert len(course.quizzes) == 2
     assert course.quizzes[1].quiz_id == 825698
+    assert course.quizzes[1].open_from == "13.04.2026 08:00"
+    assert course.quizzes[1].open_to == "29.05.2026 22:01"
+    assert course.quizzes[1].open_from_date == "2026-04-13"
+    assert course.quizzes[1].open_to_date == "2026-05-29"
+    assert course.quizzes[1].duration == "00 h 50 m 00 s"
     assert [day.date for day in course.quizzes[1].available_days] == ["2026-05-02", "2026-05-03"]
 
 
@@ -58,4 +63,3 @@ def test_registration_success_parser() -> None:
     )
     assert course.quizzes[0].reservation is not None
     assert course.quizzes[0].reservation.time == "08:40"
-

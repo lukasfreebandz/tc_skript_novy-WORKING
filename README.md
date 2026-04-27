@@ -1,73 +1,112 @@
-# tc-sniper v2
+# tc-sniper v3
 
-`tc-sniper v2` je CLI aplikace pro hlidani a automatickou rezervaci terminu v Moodle Testovacim centru na `moodle.czu.cz`.
+`tc-sniper v3` je desktop GUI verze pro hlidani a automatickou rezervaci terminu v Moodle Testovacim centru na `moodle.czu.cz`.
 
-Repo ted obsahuje:
+Projekt ted obsahuje tri vrstvy:
 
-- novy Python projekt ve `src/tc_sniper`
-- testy a fixture pro parsery
-- finalni one-file build v `run_tc_sniper.exe`
+- `shared Python core` pro login, session, discovery, parsing a booking
+- `local FastAPI backend` pro GUI komunikaci
+- `desktop GUI` v `Tauri + React + TypeScript`
+
+CLI zustava zachovane jako fallback a debug rozhrani.
 
 ## Co umi
 
-- otevrit browser a ulozit prihlasenou Moodle session
+- otevrit browser pro Moodle login a ulozit session
 - nacist TCB stranku z `/mod/tcb/view.php?id=...`
-- najit vsechny testy na dane TCB strance
-- vybrat konkretni test
-- nacist dostupne dny a sloty
-- filtrovat dny a casy podle preferenci
-- pri nalezu shody automaticky odeslat rezervaci
+- najit testy a jejich dostupne dny
+- spustit watcher nad vybranym testem
+- live zobrazovat stav watcheru a logy
+- automaticky rezervovat matching slot
+- zobrazit posledni uspesne rezervace z lokalniho event logu
 
 ## Struktura projektu
 
 ```text
 src/tc_sniper/
+  api.py
   auth.py
   cli.py
   client.py
   models.py
   parsing.py
   prompts.py
+  services/
   session_store.py
   settings.py
   watcher.py
+
+desktop/
+  package.json
+  src/
+  src-tauri/
 
 tests/
   fixtures/
   test_inputs.py
   test_parsing.py
+  test_services.py
 
 run_tc_sniper.py
+run_tc_sniper_api.py
 run_tc_sniper.exe
 pyproject.toml
 README.md
 ```
 
+## Runtime Overview
+
+### Python core
+
+Sdilena business logika zustava v Pythonu:
+
+- login/session handling
+- HTTP discovery a booking
+- watcher orchestrace
+- event log
+
+### Local API
+
+GUI komunikuje s lokalnim backendem na:
+
+```text
+http://127.0.0.1:8765
+```
+
+Hlavni endpointy:
+
+- `GET /session/status`
+- `POST /session/login/start`
+- `POST /session/login/confirm`
+- `POST /session/logout`
+- `POST /courses/discover`
+- `POST /watch/start`
+- `POST /watch/stop`
+- `GET /watch/status`
+- `GET /watch/events`
+- `GET /events/recent`
+
+### Desktop GUI
+
+GUI je v:
+
+```text
+desktop/
+```
+
+Frontend stack:
+
+- React
+- TypeScript
+- Zustand
+- Vite
+- Tauri shell
+
 ## Spusteni
 
-### Varianta 1: finalni `.exe`
+### 1. CLI fallback
 
-Nejjednodussi je pustit hotovy build:
-
-```powershell
-.\run_tc_sniper.exe --help
-.\run_tc_sniper.exe login
-.\run_tc_sniper.exe status
-.\run_tc_sniper.exe watch
-.\run_tc_sniper.exe logout
-```
-
-### Varianta 2: Python launcher
-
-Pokud chces spoustet projekt primo ze zdrojaku:
-
-```powershell
-python -m pip install -e .[dev]
-python -m playwright install chromium
-python run_tc_sniper.py --help
-```
-
-Prikazy:
+Porad funguje puvodni Python/CLI workflow:
 
 ```powershell
 python run_tc_sniper.py login
@@ -76,91 +115,106 @@ python run_tc_sniper.py watch
 python run_tc_sniper.py logout
 ```
 
-## Workflow
-
-### 1. Login
+Nebo hotovy one-file fallback build:
 
 ```powershell
 .\run_tc_sniper.exe login
-```
-
-nebo:
-
-```powershell
-python run_tc_sniper.py login
-```
-
-Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a po navratu do terminalu potvrd Enterem. Session se ulozi lokalne do:
-
-```text
-%USERPROFILE%\.tc-sniper\
-```
-
-### 2. Kontrola session
-
-```powershell
 .\run_tc_sniper.exe status
+.\run_tc_sniper.exe watch
+.\run_tc_sniper.exe logout
 ```
 
-### 3. Watch
+### 2. Local API
 
 ```powershell
-.\run_tc_sniper.exe watch
+python -m pip install -e .[dev]
+python -m playwright install chromium
+python run_tc_sniper_api.py
 ```
 
-App se zepta na:
+### 3. GUI frontend
 
-1. TCB odkaz
-2. vyber testu
-3. dny
-4. rezim casu
-5. casy nebo casove okno
-6. interval mezi pruchody
+V dalsim terminalu:
 
-Podporovane formaty dnu:
+```powershell
+cd desktop
+npm install
+npm run dev
+```
 
-- `2026-05-30..2026-06-20`
-- `2026-30-05..2026-20-06`
-- `30.05.2026..20.06.2026`
-- `2026-05-30,2026-06-03`
+Build frontendu:
 
-Podporovane casy:
+```powershell
+cd desktop
+npm run build
+```
 
-- `list`: `08:40,14:30,16:00`
-- `window`: od-do + krok v minutach
+## GUI flow
 
-Watcher behem behu vypisuje konkretni pruchody, dny a casy, ktere prave kontroluje.
+Hlavni dashboard ma 4 casti:
 
-## Jak funguje
+### Session
 
-Discovery:
+- stav session
+- `Login`
+- `Logout`
+- `Revalidate`
+- instrukce pro potvrzeni prihlaseni po browser loginu
 
-- dny se nacitaji pres `GET /mod/tcb/view.php?id=<tcb_id>&quiz=<quiz_id>`
-- sloty se nacitaji pres `GET /mod/tcb/view.php?id=<tcb_id>&day=<date>&quiz=<quiz_id>`
+### Watch Setup
 
-Booking:
+- TCB URL
+- `Load tests`
+- vyber testu
+- dny jako `list` nebo `range`, vybirane pres kalendar
+- casy jako `list` nebo `window`
+- poll interval
+- `Start watching`
 
-- registrace pres `POST /mod/tcb/view.php`
-- odhlaseni pres `POST /mod/tcb/view.php`
-- zmena terminu je pripravena v klientovi, ale watch flow v MVP dela primarne novou rezervaci
+Po nacteni testu GUI zobrazi i jeho okno:
+
+- `otevřen od`
+- `otevřen do`
+- `doba trvání`
+
+Vyber dnu je automaticky omezeny na datumove rozmezi daneho testu a backend tenhle limit overuje znovu i pri startu watcheru.
+
+### Live Monitor
+
+- aktualni stav watcheru
+- aktivni konfigurace
+- live log pruchodu
+- `Stop`
+
+### Recent Activity
+
+- posledni uspesne rezervace z `%USERPROFILE%\.tc-sniper\events.log`
 
 ## Testy
+
+Python testy:
 
 ```powershell
 python -m pytest
 ```
 
-Aktualne pokryvaji hlavne:
+Aktualni stav:
 
-- parsovani TCB stranky
-- parsovani dostupnych dnu a slotu
-- parsovani existujici rezervace
-- vstupni formaty dnu a casu
+- parser testy
+- input parsing testy
+- service utility testy
+
+Frontend verification:
+
+```powershell
+cd desktop
+npm run build
+```
 
 ## Poznamky
 
-- Projekt cilene podporuje `moodle.czu.cz`.
-- Aplikace je `CLI only`.
-- Session soubory nejsou verzovane.
-- Event log uspesnych rezervaci se uklada do `%USERPROFILE%\.tc-sniper\events.log`.
-- Finalni one-file build je v `run_tc_sniper.exe`.
+- GUI verze cilene miri na Windows desktop.
+- Login zustava pres externi Playwright browser.
+- Session a event log zustavaji v `%USERPROFILE%\.tc-sniper\`.
+- Backend je navrzeny pro jeden aktivni watcher najednou.
+- Tauri shell je scaffoldnuty v `desktop/src-tauri/`, ale na tomto stroji nebyl overen full desktop bundle, protoze tu neni nainstalovany Rust toolchain.

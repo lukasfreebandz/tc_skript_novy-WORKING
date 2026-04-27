@@ -9,11 +9,13 @@ description = "CLI watcher and auto-booker for CZU Moodle Testovaci centrum"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "fastapi>=0.115,<1",
   "httpx>=0.27,<1",
   "playwright>=1.51,<2",
   "pydantic>=2.8,<3",
   "rich>=13.7,<14",
   "typer>=0.12,<1",
+  "uvicorn>=0.30,<1",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +25,7 @@ dev = [
 
 [project.scripts]
 tc-sniper = "tc_sniper.cli:app"
+tc-sniper-api = "tc_sniper.api:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -32,4 +35,3 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-

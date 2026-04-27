@@ -29,7 +29,7 @@ class MoodleTcbClient:
             base_url=f"https://{self.host}",
             cookies=self.cookies,
             follow_redirects=True,
-            headers={"User-Agent": "tc-sniper/0.1"},
+            headers={"User-Agent": "tc-sniper/0.3"},
             timeout=30.0,
         )
 
@@ -39,7 +39,7 @@ class MoodleTcbClient:
     def validate_session(self) -> bool:
         response = self.http.get("/my/")
         html_text = response.text
-        looks_logged_in = any(marker in html_text for marker in ("Uživatelské menu", "Odhlásit se", "Nástěnka", "usertext"))
+        looks_logged_in = any(marker in html_text for marker in ("usertext", "/login/logout.php", "action-menu-toggle-0"))
         valid = response.status_code == 200 and "/login/index.php" not in str(response.url) and looks_logged_in
         if valid:
             self.store.mark_validated()
@@ -47,8 +47,7 @@ class MoodleTcbClient:
 
     def fetch_course(self, tcb_url: str) -> TcbCourse:
         response = self.http.get(tcb_url)
-        course = parse_course_page(response.text, str(response.url))
-        return course
+        return parse_course_page(response.text, str(response.url))
 
     def fetch_slots(self, tcb_id: int, quiz_id: int, day: str) -> tuple[str, str, list[AvailableSlot]]:
         response = self.http.get(

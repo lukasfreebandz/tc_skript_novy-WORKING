@@ -1,2 +1,3 @@
 [console_scripts]
 tc-sniper = tc_sniper.cli:app
+tc-sniper-api = tc_sniper.api:main

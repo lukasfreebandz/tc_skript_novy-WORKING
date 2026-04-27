@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/tc_sniper/__init__.py
+src/tc_sniper/api.py
 src/tc_sniper/auth.py
 src/tc_sniper/cli.py
 src/tc_sniper/client.py
@@ -16,5 +17,12 @@ src/tc_sniper.egg-info/dependency_links.txt
 src/tc_sniper.egg-info/entry_points.txt
 src/tc_sniper.egg-info/requires.txt
 src/tc_sniper.egg-info/top_level.txt
+src/tc_sniper/services/__init__.py
+src/tc_sniper/services/app.py
+src/tc_sniper/services/auth.py
+src/tc_sniper/services/courses.py
+src/tc_sniper/services/session.py
+src/tc_sniper/services/watch.py
 tests/test_inputs.py
 tests/test_parsing.py
+tests/test_services.py

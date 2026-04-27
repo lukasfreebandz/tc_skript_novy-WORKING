@@ -1,0 +1,329 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "Inter", sans-serif;
+  --bg: #edf3ef;
+  --panel: rgba(255, 255, 255, 0.92);
+  --line: #d7e3da;
+  --text: #183125;
+  --muted: #587060;
+  --accent: #2d6b4f;
+  --accent-soft: #dceddf;
+  --warning: #a06a16;
+  --error: #9b2d2d;
+  --success: #257243;
+  --shadow: 0 18px 40px rgba(19, 55, 40, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(120, 176, 142, 0.32), transparent 30%),
+    linear-gradient(160deg, #eff5f0 0%, #ddebe1 100%);
+  color: var(--text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.app-shell {
+  width: min(1380px, calc(100vw - 40px));
+  margin: 24px auto 40px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 28px 30px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(26, 72, 53, 0.96), rgba(44, 103, 77, 0.92));
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin: 0 0 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.72;
+  font-size: 0.78rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.subtitle {
+  max-width: 58ch;
+  opacity: 0.9;
+}
+
+.hero-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.panel {
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 22px 24px 10px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.panel-actions,
+.inline-actions,
+.row,
+.split {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.panel-body {
+  padding: 0 24px 24px;
+}
+
+.panel-body label {
+  display: block;
+  margin-top: 14px;
+  color: var(--muted);
+}
+
+.align-end {
+  align-self: end;
+  margin-top: 2rem;
+}
+
+.grow {
+  flex: 1;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.33rem 0.78rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #eef1ef;
+}
+
+.status-valid,
+.status-success,
+.status-booked {
+  background: #ddf3e4;
+  color: var(--success);
+}
+
+.status-expired,
+.status-error {
+  background: #f9dddd;
+  color: var(--error);
+}
+
+.status-running,
+.status-discovering-course,
+.status-validating-session,
+.status-attempting-booking,
+.status-opening-browser,
+.status-waiting-for-confirmation,
+.status-completing {
+  background: #dbe8ff;
+  color: #3059a8;
+}
+
+.status-logged-out,
+.status-stopped,
+.status-idle,
+.status-unknown {
+  background: #ebefec;
+  color: var(--muted);
+}
+
+.status-already-reserved {
+  background: #fff0c6;
+  color: var(--warning);
+}
+
+.callout {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--accent-soft);
+  border-radius: 18px;
+}
+
+.callout.warning {
+  background: #fff1d7;
+}
+
+.log-panel {
+  margin-top: 16px;
+  min-height: 280px;
+  max-height: 360px;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 18px;
+  background: #0f1b16;
+  color: #d6e6dd;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}
+
+.log-line + .log-line {
+  margin-top: 8px;
+}
+
+.log-warning {
+  color: #f0c86e;
+}
+
+.log-error {
+  color: #f09b9b;
+}
+
+.log-success {
+  color: #8de7b0;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.calendar-list-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.day-chip {
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: #eef6f0;
+  border: 1px solid #c8dfcf;
+}
+
+.event-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.event-card p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.event-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-weight: 600;
+}
+
+@media (max-width: 1080px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .hero-status {
+    align-items: flex-start;
+  }
+
+  .split {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
