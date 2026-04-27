@@ -8,21 +8,10 @@ def parse_human_date(raw: str) -> date:
     if not value:
         raise ValueError("Datum nesmi byt prazdne.")
 
-    candidates = (
-        "%Y-%m-%d",
-        "%Y-%d-%m",
-        "%d.%m.%Y",
-        "%d-%m-%Y",
-        "%d/%m/%Y",
-    )
-    for fmt in candidates:
-        try:
-            return datetime.strptime(value, fmt).date()
-        except ValueError:
-            continue
-    raise ValueError(
-        "Neplatny format data. Pouzij napriklad 2026-05-30, 2026-30-05 nebo 30.05.2026."
-    )
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise ValueError("Neplatny format data. Pouzij YYYY-MM-DD, napr. 2026-05-30.") from exc
 
 
 def expand_days_input(raw: str) -> list[str]:
@@ -42,6 +31,43 @@ def expand_days_input(raw: str) -> list[str]:
             current += timedelta(days=1)
         return days
     return [parse_human_date(part.strip()).isoformat() for part in raw.split(",") if part.strip()]
+
+
+def parse_quiz_open_date(raw: str | None) -> date | None:
+    if raw is None:
+        return None
+    value = raw.strip()
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%d.%m.%Y %H:%M").date()
+    except ValueError:
+        return None
+
+
+def validate_days_within_bounds(days: list[str], min_day: date | None = None, max_day: date | None = None) -> None:
+    if min_day is None and max_day is None:
+        return
+    for item in days:
+        parsed = parse_human_date(item)
+        if min_day is not None and parsed < min_day:
+            raise ValueError(
+                f"Vybrany den {item} je pred otevrenim testu. Nejdrive lze zadat {min_day.isoformat()}."
+            )
+        if max_day is not None and parsed > max_day:
+            raise ValueError(
+                f"Vybrany den {item} je po uzavreni testu. Nejpozdeji lze zadat {max_day.isoformat()}."
+            )
+
+
+def compute_effective_day_bounds(
+    open_from: date | None,
+    open_to: date | None,
+    today: date | None = None,
+) -> tuple[date, date | None]:
+    effective_today = today or date.today()
+    effective_min = max(open_from, effective_today) if open_from is not None else effective_today
+    return effective_min, open_to
 
 
 def build_times_from_window(start_raw: str, end_raw: str, step_minutes: int) -> list[str]:

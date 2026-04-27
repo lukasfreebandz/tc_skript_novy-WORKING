@@ -9,12 +9,38 @@ from tc_sniper.session_store import SessionStore
 from tc_sniper.settings import STORAGE_STATE_PATH, ensure_app_dirs
 
 
+def _launch_login_browser(playwright, console: Console):
+    """Prefer bundled Playwright Chromium, then fall back to installed browsers."""
+    attempts: list[tuple[str, dict[str, object]]] = [
+        ("Playwright Chromium", {"headless": False}),
+        ("Microsoft Edge", {"channel": "msedge", "headless": False}),
+        ("Google Chrome", {"channel": "chrome", "headless": False}),
+    ]
+    errors: list[str] = []
+
+    for label, kwargs in attempts:
+        try:
+            browser = playwright.chromium.launch(**kwargs)
+            console.print(f"[green]Oteviram browser:[/green] {label}")
+            return browser
+        except Exception as exc:
+            errors.append(f"{label}: {exc}")
+
+    details = "\n".join(f" - {item}" for item in errors)
+    raise RuntimeError(
+        "Nepodarilo se otevrit zadny podporovany browser pro login.\n"
+        "Zkus na cilovem PC nainstalovat Microsoft Edge nebo Google Chrome.\n"
+        "Pokud chces pouzit Playwright Chromium, je potreba doinstalovat browser pres 'playwright install chromium'.\n"
+        f"Detaily:\n{details}"
+    )
+
+
 def login_and_store_session(host: str, store: SessionStore, console: Console) -> None:
     ensure_app_dirs()
     login_url = f"https://{host}/my/"
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
+        browser = _launch_login_browser(playwright, console)
         context = browser.new_context()
         page = context.new_page()
         page.goto(login_url, wait_until="domcontentloaded")

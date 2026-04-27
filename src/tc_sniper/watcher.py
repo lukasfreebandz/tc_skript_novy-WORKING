@@ -15,15 +15,34 @@ def choose_quiz(console: Console, course: TcbCourse) -> QuizOption:
         raise RuntimeError("Na TCB strance nebyly nalezeny zadne testy.")
     if len(course.quizzes) == 1:
         quiz = course.quizzes[0]
-        console.print(f"[green]Nalezen 1 test:[/green] {quiz.title}")
+        suffix = []
+        if quiz.open_from:
+            suffix.append(f"od {quiz.open_from}")
+        if quiz.open_to:
+            suffix.append(f"do {quiz.open_to}")
+        if quiz.duration:
+            suffix.append(f"trvani {quiz.duration}")
+        details = f" ({', '.join(suffix)})" if suffix else ""
+        console.print(f"[green]Nalezen 1 test:[/green] {quiz.title}{details}")
         return quiz
 
     table = Table(title="Nalezeny testy")
     table.add_column("#")
     table.add_column("Nazev")
+    table.add_column("Otevreni")
+    table.add_column("Trvani")
     table.add_column("Quiz ID")
     for index, quiz in enumerate(course.quizzes, start=1):
-        table.add_row(str(index), quiz.title, str(quiz.quiz_id))
+        opening = "-"
+        if quiz.open_from or quiz.open_to:
+            opening = f"{quiz.open_from or '?'} -> {quiz.open_to or '?'}"
+        table.add_row(
+            str(index),
+            quiz.title,
+            opening,
+            quiz.duration or "-",
+            str(quiz.quiz_id),
+        )
     console.print(table)
     selection = int(console.input("Vyber test (cislo): "))
     if selection < 1 or selection > len(course.quizzes):

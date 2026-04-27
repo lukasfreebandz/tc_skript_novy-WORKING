@@ -15,3 +15,7 @@ _tc_runtime/
 
 # Local runtime/session data
 .tc-sniper/
+
+# Desktop app artifacts
+desktop/node_modules/
+desktop/dist/

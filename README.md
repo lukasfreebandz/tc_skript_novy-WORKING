@@ -57,6 +57,8 @@ Nejjednodussi je pustit hotovy build:
 .\run_tc_sniper.exe logout
 ```
 
+Po spusteni `run_tc_sniper.exe` bez argumentu, napr. dvojklikem v Exploreru, aplikace automaticky spusti vychozi flow `login -> watch` a na konci pocka na Enter.
+
 ### Varianta 2: Python launcher
 
 Pokud chces spoustet projekt primo ze zdrojaku:
@@ -90,7 +92,7 @@ nebo:
 python run_tc_sniper.py login
 ```
 
-Aplikace otevre Chromium okno. Prihlas se rucne do Moodle a po navratu do terminalu potvrd Enterem. Session se ulozi lokalne do:
+Aplikace otevre browser pro prihlaseni. Preferuje Playwright Chromium, ale kdyz na cilovem PC neni dostupny, zkusi nainstalovany Microsoft Edge nebo Google Chrome. Prihlas se rucne do Moodle a po navratu do terminalu potvrd Enterem. Session se ulozi lokalne do:
 
 ```text
 %USERPROFILE%\.tc-sniper\
@@ -119,10 +121,8 @@ App se zepta na:
 
 Podporovane formaty dnu:
 
-- `2026-05-30..2026-06-20`
-- `2026-30-05..2026-20-06`
-- `30.05.2026..20.06.2026`
-- `2026-05-30,2026-06-03`
+- `2026-05-30..2026-06-20` pro souvisly rozsah dnu
+- `2026-05-30,2026-06-03` pro jednotlive konkretni dny
 
 Podporovane casy:
 

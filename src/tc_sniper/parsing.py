@@ -31,6 +31,10 @@ RESERVATION_ROW_RE = re.compile(
     r"<tr><td>Rezervovan.*?term.*?:</td><td>(?P<date>\d{2}\.\d{2}\.\d{4})</td><td>(?P<time>\d{2}:\d{2})</td><td>(?P<arrive>[^<]*)</td><td>.*?<input type=\"hidden\" name=\"tcbaction\" value=\"unregister\">.*?<input type=\"hidden\" name=\"unregister\" value=\"(?P<unregister>\d+)\">.*?<input type=\"hidden\" name=\"quiz\" value=\"(?P<quiz_id>\d+)\">.*?<input type=\"hidden\" name=\"day\" value=\"(?P<day>\d{4}-\d{2}-\d{2})\">.*?</form></strong>\s*\((?P<deadline>[^)]*)\)",
     re.I | re.S,
 )
+QUIZ_META_ROW_RE = re.compile(
+    r"<tr><td>(?P<label>[^<]+)</td><td>(?P<value>.*?)</td></tr>",
+    re.I | re.S,
+)
 
 
 def _strip_tags(value: str) -> str:
@@ -74,10 +78,14 @@ def parse_course_page(html_text: str, source_url: str) -> TcbCourse:
     for match in QUIZ_SECTION_RE.finditer(html_text):
         quiz_id = int(match.group("quiz_id"))
         body = match.group("body")
+        metadata = parse_quiz_metadata(body)
         quiz = QuizOption(
             quiz_id=quiz_id,
             title=_strip_tags(match.group("title")),
             quiz_url=html.unescape(match.group("href")),
+            open_from=metadata.get("open_from"),
+            open_to=metadata.get("open_to"),
+            duration=metadata.get("duration"),
             available_days=parse_available_days(body, source_url),
             reservation=parse_reservation(body),
         )
@@ -101,6 +109,24 @@ def parse_available_days(html_fragment: str, source_url: str) -> list[AvailableD
     for day in days:
         deduped[day.date] = day
     return list(deduped.values())
+
+
+def parse_quiz_metadata(html_fragment: str) -> dict[str, str | None]:
+    metadata: dict[str, str | None] = {
+        "open_from": None,
+        "open_to": None,
+        "duration": None,
+    }
+    for match in QUIZ_META_ROW_RE.finditer(html_fragment):
+        label = _strip_tags(match.group("label")).strip().lower()
+        value = _strip_tags(match.group("value")).strip() or None
+        if label == "otevřen od":
+            metadata["open_from"] = value
+        elif label == "otevřen do":
+            metadata["open_to"] = value
+        elif label == "doba trvání":
+            metadata["duration"] = value
+    return metadata
 
 
 def parse_reservation(html_fragment: str) -> Reservation | None:

@@ -42,6 +42,9 @@ class QuizOption(BaseModel):
     quiz_id: int
     title: str
     quiz_url: str
+    open_from: str | None = None
+    open_to: str | None = None
+    duration: str | None = None
     available_days: list[AvailableDay] = Field(default_factory=list)
     reservation: Reservation | None = None
 
